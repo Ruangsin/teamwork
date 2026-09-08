@@ -21,6 +21,7 @@
 | โฟลเดอร์ / ไฟล์ | คำอธิบาย |
 |---|---|
 | [`rus-teamwork/`](https://ruangsin.github.io/teamwork/rus-teamwork/) | DISC Assessment — แบบประเมินบุคลิกภาพ DISC |
+| [`rus-teamwork/team-roles-assessment.html`](https://ruangsin.github.io/teamwork/rus-teamwork/team-roles-assessment.html) | Team Roles Assessment — แบบประเมินบทบาทในทีม |
 
 ---
 
