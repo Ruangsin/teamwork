@@ -456,6 +456,9 @@
       <div class="res-name" id="resName"></div>
       <div class="res-title" id="resTitle">—</div>
       <div class="res-sub" id="resSub">—</div>
+      <div id="flatWarning" style="display:none;background:#FCEFE3;border:1px solid #EBC9A0;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#7A4A18;margin-bottom:22px;">
+        ⚠️ คำตอบของคุณค่อนข้างเท่ากันในทุกมิติ ผลลัพธ์นี้จึงยังไม่ฟันธงสไตล์ที่โดดเด่นชัดเจน ลองทำอีกครั้งโดยเทียบแต่ละข้อความกับข้ออื่นๆ ว่าข้อไหน "ใช่เรามากกว่า" แทนที่จะให้คะแนนสูง/ต่ำแบบเดียวกันหมดทุกข้อ
+      </div>
     </div>
 
     <div class="quad-wrap">
@@ -466,6 +469,7 @@
 
     <div class="bars">
       <h3>คะแนนแต่ละบุคลิก</h3>
+      <div style="font-size:12.5px;color:var(--ink-soft);margin:-12px 0 18px;">% แสดงสัดส่วนเทียบกันระหว่าง 4 มิติ ไม่ใช่คะแนนอิสระเต็ม 100 ของแต่ละมิติ</div>
       <div id="barList"></div>
     </div>
 
@@ -669,11 +673,24 @@ function prevQ(){
 function computeResults(){
   const totals = {D:0,I:0,S:0,C:0};
   QUESTIONS.forEach((item,i)=>{ totals[item.t] += answers[i]; });
+
+  // Ipsative (relative-share) scoring: each dimension's percentage reflects
+  // its share RELATIVE to the other three, the same way real forced-choice
+  // DISC instruments work. This prevents the degenerate case where
+  // answering the max (or min) on every item would otherwise show 100%
+  // (or 0%) on all four dimensions at once.
+  const sumAll = totals.D + totals.I + totals.S + totals.C;
   const pct = {};
-  Object.keys(totals).forEach(k=>{ pct[k] = Math.round(totals[k]/30*100); });
+  Object.keys(totals).forEach(k=>{ pct[k] = Math.round(totals[k]/sumAll*100); });
 
   const order = Object.keys(pct).sort((a,b)=>pct[b]-pct[a]);
   const primary = order[0], secondary = order[1];
+
+  // Flat-response check: if all four raw totals are nearly identical,
+  // the answers didn't differentiate enough to show a clear lean.
+  const rawVals = Object.values(totals);
+  const spread = Math.max(...rawVals) - Math.min(...rawVals);
+  const flatResponse = spread <= 3;
 
   const nameVal = document.getElementById('uname').value.trim();
   document.getElementById('resName').textContent = nameVal ? "ผลของ " + nameVal : "";
@@ -685,6 +702,7 @@ function computeResults(){
     'สไตล์หลัก: <span class="type-letter" style="color:'+PROFILES[primary].color+'">' + PROFILES[primary].animal + '</span> · ' + PROFILES[primary].name;
   document.getElementById('resSub').textContent =
     "ร่วมกับลักษณะรอง " + PROFILES[secondary].animal + " (" + PROFILES[secondary].name + ") — " + PROFILES[primary].desc;
+  document.getElementById('flatWarning').style.display = flatResponse ? 'block' : 'none';
 
   // watermark images
   document.getElementById('resultWatermark').src = PROFILES[primary].icon;
@@ -734,8 +752,8 @@ function drawQuadrant(pct){
   // y axis: fast/outgoing(top,+) <-> steady/reflective(bottom,-) => (D+I) - (S+C)
   const x = (pct.I + pct.S) - (pct.D + pct.C);
   const y = (pct.D + pct.I) - (pct.S + pct.C);
-  const nx = Math.max(-1, Math.min(1, x/140));
-  const ny = Math.max(-1, Math.min(1, y/140));
+  const nx = Math.max(-1, Math.min(1, x/60));
+  const ny = Math.max(-1, Math.min(1, y/60));
 
   const size = 360, pad = 46, cx = size/2, cy = size/2;
   const px = cx + nx * (size/2 - pad);
